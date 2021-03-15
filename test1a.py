@@ -1,0 +1,54 @@
+import pandas as pd
+import numpy as np
+from math import sqrt#开平方根
+
+# simply using ridge regression, K-folds and mean squared error provided in sklearn
+from sklearn.linear_model import Ridge#导入minw函数
+from sklearn.model_selection import KFold#Kfold函数功能：随机分n份，分n次，每次从n份里选n-1个训练集1个测试集(常用n=10)
+from sklearn.metrics import mean_squared_error#导入Rmse的平方
+
+# read training data set
+train_data = pd.read_csv('train.csv')
+X = np.array(train_data.iloc[:, 1:])#取出x:所有行的第二列开始的数据
+Y = np.array(train_data['y'])#导入所有行的第1列也可以
+
+# lambdas
+lambdas = [0.1, 1, 10, 100, 200]#给lamula赋值
+
+# K-folds
+kf = KFold(n_splits=10, shuffle=True)
+
+# output array
+output = []#建立一个新的空数组
+
+# for each lambda
+for lambdaa in lambdas:
+    sum_rmse = 0.0#lamuna初始值
+    
+    # for each (K-1) folds, fit ridge regression
+    for train_id, test_id in kf.split(X):
+        train_X = X[train_id]
+        train_Y = Y[train_id]
+
+        model = Ridge(alpha=lambdaa)
+        model.fit(train_X, train_Y)
+
+        test_X = X[test_id]
+        test_Y = Y[test_id]
+        predict_Y = model.predict(test_X)
+        rmse = sqrt(mean_squared_error(test_Y, predict_Y))
+
+        sum_rmse += rmse
+    
+    sum_rmse /= 10.0
+    output.append(sum_rmse)
+
+# create data frame
+df = pd.DataFrame(output)#查如何从数组数据array导出成为csv数据
+
+# write to file
+df.to_csv('submission2.csv', index=False, header=False)
+
+
+
+  
